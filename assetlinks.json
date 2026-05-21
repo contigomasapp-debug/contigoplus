@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "lat.contigoplus.twa",
+        "sha256_cert_fingerprints": ["57:E4:31:4F:A2:EE:61:5A:34:1A:1C:72:1E:82:01:6E:A6:F5:BD:42:6B:E7:27:64:4D:C4:7B:51:D8:D9:15:F4"]
+      }
+    }]
