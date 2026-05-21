@@ -2607,24 +2607,18 @@ function startGuideAudio() {
 }
 
 function speakGuideText(text, pauseAfter, callback) {
-  fetch('/.netlify/functions/tts', {
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/D9MdulIxfrCUUJcGNQon/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text, style: 0.3 })
+    headers: { 'xi-api-key': 'sk_5d4524ba30dedc30c5bb3daa7f8b398cb0d09b90b3e72e9a', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.80, similarity_boost: 0.85, style: 0.2, use_speaker_boost: true } })
   }).then(function(res) {
-    if (!res.ok) throw new Error('TTS error');
+    if (!res.ok) throw new Error('TTS');
     return res.blob();
   }).then(function(blob) {
     var url = URL.createObjectURL(blob);
     var audio = new Audio(url);
-    audio.onended = function() {
-      URL.revokeObjectURL(url);
-      if (callback) guideTimeout = setTimeout(callback, pauseAfter);
-    };
-    audio.onerror = function() {
-      URL.revokeObjectURL(url);
-      if (callback) guideTimeout = setTimeout(callback, 500);
-    };
+    audio.onended = function() { URL.revokeObjectURL(url); if (callback) guideTimeout = setTimeout(callback, pauseAfter); };
+    audio.onerror = function() { URL.revokeObjectURL(url); if (callback) guideTimeout = setTimeout(callback, 500); };
     audio.play();
   }).catch(function() {
     var utt = new SpeechSynthesisUtterance(text);
@@ -3211,26 +3205,18 @@ function speakNightText() {
   var current = document.getElementById('night-step-item-' + (nightAudioIdx - 1));
   if (current) { current.style.opacity = '1'; current.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
-  fetch('/.netlify/functions/tts', {
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/D9MdulIxfrCUUJcGNQon/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text, style: 0.2 })
+    headers: { 'xi-api-key': 'sk_5d4524ba30dedc30c5bb3daa7f8b398cb0d09b90b3e72e9a', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.80, similarity_boost: 0.85, style: 0.15, use_speaker_boost: true } })
   }).then(function(res) {
-    if (!res.ok) throw new Error('TTS error');
+    if (!res.ok) throw new Error('TTS');
     return res.blob();
   }).then(function(blob) {
     var url = URL.createObjectURL(blob);
     var audio = new Audio(url);
-    audio.onended = function() {
-      URL.revokeObjectURL(url);
-      nightAudioIdx++;
-      nightAudioTimeout = setTimeout(speakNightText, 2000);
-    };
-    audio.onerror = function() {
-      URL.revokeObjectURL(url);
-      nightAudioIdx++;
-      nightAudioTimeout = setTimeout(speakNightText, 500);
-    };
+    audio.onended = function() { URL.revokeObjectURL(url); nightAudioIdx++; nightAudioTimeout = setTimeout(speakNightText, 2000); };
+    audio.onerror = function() { URL.revokeObjectURL(url); nightAudioIdx++; nightAudioTimeout = setTimeout(speakNightText, 500); };
     audio.play();
   }).catch(function() {
     var utt = new SpeechSynthesisUtterance(text);
@@ -3821,24 +3807,18 @@ function playAnimScene() {
 }
 
 function speakAnimScene(text, callback) {
-  fetch('/.netlify/functions/tts', {
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/D9MdulIxfrCUUJcGNQon/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text, style: 0.2 })
+    headers: { 'xi-api-key': 'sk_5d4524ba30dedc30c5bb3daa7f8b398cb0d09b90b3e72e9a', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.80, similarity_boost: 0.85, style: 0.15, use_speaker_boost: true } })
   }).then(function(res) {
-    if (!res.ok) throw new Error('TTS error');
+    if (!res.ok) throw new Error('TTS');
     return res.blob();
   }).then(function(blob) {
     var url = URL.createObjectURL(blob);
     var audio = new Audio(url);
-    audio.onended = function() {
-      URL.revokeObjectURL(url);
-      animMedTimeout = setTimeout(callback, 600);
-    };
-    audio.onerror = function() {
-      URL.revokeObjectURL(url);
-      animMedTimeout = setTimeout(callback, 500);
-    };
+    audio.onended = function() { URL.revokeObjectURL(url); animMedTimeout = setTimeout(callback, 600); };
+    audio.onerror = function() { URL.revokeObjectURL(url); animMedTimeout = setTimeout(callback, 500); };
     audio.play();
   }).catch(function() {
     if (!window.speechSynthesis) { animMedTimeout = setTimeout(callback, 3000); return; }
@@ -4939,96 +4919,57 @@ function playWhiteNoise(ctx) {
   source.buffer = buffer;
   source.loop = true;
   const gain = ctx.createGain();
-  gain.gain.value = 0.12;
+  gain.gain.value = 0.06;
   const filter = ctx.createBiquadFilter();
   filter.type = 'lowpass';
-  filter.frequency.value = 1800;
+  filter.frequency.value = 800;
   source.connect(filter);
   filter.connect(gain);
   gain.connect(ctx.destination);
   source.start();
   soundNodes.push(source);
+}
+
+// Música zen suave con cuencos tibetanos y tonos armónicos
+function playZenMusic(ctx) {
+  const notes = [174, 285, 396, 417, 528, 639, 741, 852];
+  function playBowl(freq, delay) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const t = ctx.currentTime + delay;
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.04, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 6);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 6);
+    // Armónico
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.value = freq * 2;
+    gain2.gain.setValueAtTime(0, t);
+    gain2.gain.linearRampToValueAtTime(0.015, t + 0.3);
+    gain2.gain.exponentialRampToValueAtTime(0.001, t + 4);
+    osc2.connect(gain2); gain2.connect(ctx.destination);
+    osc2.start(t); osc2.stop(t + 4);
+  }
+  function zenLoop() {
+    const note = notes[Math.floor(Math.random() * notes.length)];
+    playBowl(note, 0);
+    if (Math.random() > 0.4) {
+      const note2 = notes[Math.floor(Math.random() * notes.length)];
+      playBowl(note2, 3);
+    }
+    setTimeout(zenLoop, 8000 + Math.random() * 6000);
+  }
+  zenLoop();
 }
 
 function playRain(ctx) {
-  // Base rain - white noise filtered
-  const bufferSize = ctx.sampleRate * 3;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  source.loop = true;
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.value = 1200;
-  filter.Q.value = 0.3;
-  const gain = ctx.createGain();
-  gain.gain.value = 0.18;
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  source.start();
-  soundNodes.push(source);
-
-  // Random drip sounds
-  function drip() {
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.frequency.value = 800 + Math.random() * 400;
-    osc.type = 'sine';
-    g.gain.setValueAtTime(0, ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-    osc.connect(g); g.connect(ctx.destination);
-    osc.start(); osc.stop(ctx.currentTime + 0.3);
-    setTimeout(drip, 300 + Math.random() * 800);
-  }
-  drip();
-}
-
-function playOcean(ctx) {
-  // Wave sound using filtered noise with LFO
+  // Lluvia suave y uniforme
   const bufferSize = ctx.sampleRate * 4;
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  source.loop = true;
-  const filter = ctx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 700;
-
-  // LFO for wave effect
-  const lfo = ctx.createOscillator();
-  const lfoGain = ctx.createGain();
-  lfo.frequency.value = 0.12;
-  lfoGain.gain.value = 300;
-  lfo.connect(lfoGain);
-  lfoGain.connect(filter.frequency);
-
-  const gain = ctx.createGain();
-  gain.gain.value = 0.22;
-
-  // Volume LFO
-  const volLfo = ctx.createOscillator();
-  const volLfoGain = ctx.createGain();
-  volLfo.frequency.value = 0.12;
-  volLfoGain.gain.value = 0.08;
-  volLfo.connect(volLfoGain);
-  volLfoGain.connect(gain.gain);
-
-  source.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  source.start(); lfo.start(); volLfo.start();
-  soundNodes.push(source, lfo, volLfo);
-}
-
-function playForest(ctx) {
-  // Wind base
-  const bufferSize = ctx.sampleRate * 3;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
   for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -5039,42 +4980,76 @@ function playForest(ctx) {
   filter.type = 'lowpass';
   filter.frequency.value = 600;
   const gain = ctx.createGain();
-  gain.gain.value = 0.08;
-  source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  gain.gain.value = 0.07;
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
   source.start();
   soundNodes.push(source);
+  // Música zen suave de fondo
+  playZenMusic(ctx);
+}
 
-  // Bird chirps
-  function chirp() {
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    const freq = 2000 + Math.random() * 1500;
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(freq * 1.3, ctx.currentTime + 0.08);
-    osc.frequency.linearRampToValueAtTime(freq, ctx.currentTime + 0.15);
-    g.gain.setValueAtTime(0, ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    osc.connect(g); g.connect(ctx.destination);
-    osc.start(); osc.stop(ctx.currentTime + 0.25);
-    // Sometimes double chirp
-    if (Math.random() > 0.5) {
-      setTimeout(() => {
-        const o2 = ctx.createOscillator();
-        const g2 = ctx.createGain();
-        o2.type = 'sine';
-        o2.frequency.value = freq * 1.2;
-        g2.gain.setValueAtTime(0, ctx.currentTime);
-        g2.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.02);
-        g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        o2.connect(g2); g2.connect(ctx.destination);
-        o2.start(); o2.stop(ctx.currentTime + 0.2);
-      }, 180);
-    }
-    setTimeout(chirp, 2000 + Math.random() * 5000);
-  }
-  chirp();
+function playOcean(ctx) {
+  const bufferSize = ctx.sampleRate * 4;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 400;
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.value = 0.08;
+  lfoGain.gain.value = 150;
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+  const gain = ctx.createGain();
+  gain.gain.value = 0.08;
+  const volLfo = ctx.createOscillator();
+  const volLfoGain = ctx.createGain();
+  volLfo.frequency.value = 0.08;
+  volLfoGain.gain.value = 0.03;
+  volLfo.connect(volLfoGain);
+  volLfoGain.connect(gain.gain);
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  source.start(); lfo.start(); volLfo.start();
+  soundNodes.push(source, lfo, volLfo);
+  // Música zen suave de fondo
+  playZenMusic(ctx);
+}
+
+function playForest(ctx) {
+  // Viento suave del bosque — sin pájaros
+  const bufferSize = ctx.sampleRate * 4;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 350;
+  // LFO para efecto de viento suave
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.frequency.value = 0.05;
+  lfoGain.gain.value = 100;
+  lfo.connect(lfoGain);
+  lfoGain.connect(filter.frequency);
+  const gain = ctx.createGain();
+  gain.gain.value = 0.06;
+  source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  source.start(); lfo.start();
+  soundNodes.push(source, lfo);
+  // Música zen suave de fondo
+  playZenMusic(ctx);
 }
 
 
@@ -5420,3 +5395,4 @@ function renderChart() {
 </script>
 </body>
 </html>
+
